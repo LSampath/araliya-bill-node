@@ -11,7 +11,7 @@ const authUser = (username, password) => {
                     reject(err);
                 } else if (res.length) {
                     var token = jwt.sign(
-                        {"username": username},
+                        {"user_id": res[0].user_id},
                         config.secret
                     );
                     resolve({
@@ -38,8 +38,8 @@ const validateToken = (token) => {
                 if (err) {
                     reject({auth: false, message: 'Unable to authenticate'});
                 }
-                connection.query("SELECT user_name FROM user WHERE user_name=?",
-                    [decoded['username']],
+                connection.query("SELECT * FROM user WHERE user_id=?",
+                    [decoded['user_id']],
                     (err1, res) => {
                         if (err1) {
                             reject({auth: false, message: 'Unable to authenticate'});
@@ -69,7 +69,7 @@ const addUser = (user) => {
 
 const getUsers = () => {
     return new Promise((resolve, reject) => {
-        connection.query("SELECT user_name, full_name, email FROM USER",
+        connection.query("SELECT user_id, user_name, full_name, email FROM user",
             (err, res) => {
                 if (err) {
                     reject(err);
@@ -79,25 +79,57 @@ const getUsers = () => {
     });
 };
 
-const getUser = (user_id) => {
+const getUser = (access_token) => {
     return new Promise((resolve, reject) => {
-        connection.query("SELECT user_name, full_name, email FROM USER WHERE user_id=?",
-            [user_id],
-            (err, res) => {
-                if (err) {
-                    reject(err);
-                }
-                resolve(res);
-            });
+        jwt.verify(access_token, config.secret, (err, decoded) => {
+            if (err) {
+                reject(err);
+            }
+            connection.query("SELECT user_id, user_name, full_name, email FROM user WHERE user_id=?",
+                [decoded['user_id']],
+                (err1, res) => {
+                    if (err1) {
+                        reject(err1);
+                    } else if (res.length) {
+                        resolve(res[0]);
+                    } else {
+                        reject({auth: false});
+                    }
+                });
+        });
+        // connection.query("SELECT user_id, user_name, full_name, email FROM user WHERE user_id=?",
+        //     [access_token],
+        //     (err1, res) => {
+        //         if (err1) {
+        //             reject(err1);
+        //         } else if (res.length) {
+        //             resolve(res[0]);
+        //         } else {
+        //             reject({result: 'Auth failed'});
+        //         }
+        //     });
     });
 };
 
-// const updateUser = (user) => {
-//     return new Promise((resolve, reject) => {
-//         connection.query("U")
-//     })
-// }
+const updateUser = (access_token, user) => {
+    return new Promise((resolve, reject) => {
+        jwt.verify(access_token, config.secret, (err, decoded) => {
+            if (err) {
+                reject(err);
+            }
+            connection.query("UPDATE user SET user_name=?, full_name=?, email=?, password=MD5(?) WHERE user_id=?",
+                [user.user_name, user.full_name, user.email, user.password, decoded['user_id']],
+                (err1, res) => {
+                    if (err1) {
+                        reject(err1);
+                    } else {
+                        resolve(res);
+                    }
+                });
+        });
+    })
+}
 
 module.exports = {
-    authUser, addUser, getUsers, getUser, validateToken
+    authUser, addUser, getUsers, getUser, validateToken, updateUser
 }
