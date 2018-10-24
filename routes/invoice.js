@@ -3,7 +3,6 @@ const router = express.Router();
 
 const InvoiceController = require('../controller/invoice');
 
-
 /**
  * POST
  * add new invoice
@@ -16,16 +15,18 @@ router.post('/', (req, res) => {
     });
 });
 
-/**
- * GET
- * get all invoices within time range (from and to), for given supplier_id
- */
-router.get('/', (req, res) => {
-    console.log(req.query);
-    InvoiceController.getInvoices(req.query.from, req.query.to, req.query.supplier).then((result) => {
+router.put('/:invoice_id', (req, res) => {
+    InvoiceController.updateInvoice(req.params["invoice_id"], req.body).then((result) => {
         res.status(200).send(result);
     }).catch((err) => {
-        console.log(err);
+        res.status(400).send(err);
+    });
+});
+
+router.get('/:invoice_id', (req, res) => {
+    InvoiceController.getInvoice(req.params.invoice_id).then((result) => {
+        res.status(200).send(result);
+    }).catch((err) => {
         res.status(400).send(err);
     });
 });

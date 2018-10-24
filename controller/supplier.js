@@ -21,7 +21,11 @@ const getSupplier = (supplier_id) => {
                 if (err) {
                     reject(err);
                 }
-                resolve(res);
+                if (res.length == 1) {
+                    resolve(res);
+                } else {
+                    reject({result: 'No such invoice'});
+                }
             });
     });
 }

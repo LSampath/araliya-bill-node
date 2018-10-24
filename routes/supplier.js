@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const SupplierController = require('../controller/supplier');
+const InvoiceController = require('../controller/invoice');
 
 router.get('/', (req, res) => {
     SupplierController.getSuppliers().then((result) => {
@@ -19,6 +20,32 @@ router.get('/:supplier_id', (req, res) => {
             res.status(404).send(result);
         }
     }).catch((err) => {
+        res.status(400).send(err);
+    });
+});
+
+/**
+ * GET
+ * get all invoices within time range (from and to), for given supplier_id
+ */
+router.get('/:supplier_id/invoice', (req, res) => {
+    InvoiceController.getInvoices(req.query.from, req.query.to, req.params.supplier_id).then((result) => {
+        res.status(200).send(result);
+    }).catch((err) => {
+        console.log(err);
+        res.status(400).send(err);
+    });
+});
+
+/**
+ * GET
+ * get min, max invoice dates, for given supplier_id
+ */
+router.get('/:supplier_id/invoice/dates', (req, res) => {
+    InvoiceController.getInvoiceDateRange(req.params.supplier_id).then((result) => {
+        res.status(200).send(result);
+    }).catch((err) => {
+        console.log(err);
         res.status(400).send(err);
     });
 });
